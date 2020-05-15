@@ -1,4 +1,5 @@
 import numpy as np
+from app import Application
 
 # Variáveis globais
 
@@ -147,7 +148,12 @@ def main():
     # Imprime matrizes
     # Linha n corresponde ao tempo n*dt
     # Coluna k corresponde à posição k*dz
-    print_result(current_matrix, voltage_matrix)
+    # print_result(current_matrix, voltage_matrix)
+
+    app = Application(current_matrix, voltage_matrix)
+    app.minsize(500,500)
+    app.title("Ondas Eletromagnéticas")
+    app.mainloop()
     
     
     
