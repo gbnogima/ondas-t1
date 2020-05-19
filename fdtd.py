@@ -110,7 +110,12 @@ def wave_propagation(i0, v0, current_matrix, voltage_matrix, bw):
 class FDTD():
     def calculate(rl):
         global c1, c2, array_size, n_max, k_max, time
+        c1 = 0
+        c2 = 0
 
+        array_size = 0
+        n_max = 0
+        k_max = 0
         time = 0
 
         # Cálculo das constantes das Equações do Telegrafista
