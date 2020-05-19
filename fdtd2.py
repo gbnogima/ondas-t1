@@ -1,6 +1,7 @@
 import numpy as np
 import inquirer
-from app import Application
+import math
+# from app import Application
 
 # Variáveis globais
 
@@ -27,94 +28,62 @@ n_max = 0
 k_max = 0
 time = 1
 
-# Solicita o valor da carga
-def rl_choice_menu():
-    questions = [
-        inquirer.List('R',
-                    message="Valor da carga",
-                    choices=[('∞ (carga em aberto)', 1), ('0 (carga em curto-circuito)', 2), ('100', 3)],
-                ),
-        ]
-    answer = inquirer.prompt(questions)
-    if answer['R'] == 1:
-        return 'inf'
-        
-    elif answer['R'] == 2:
-        return 0
-
-    elif answer['R'] == 3:
-        return 100
-
-# -----------------------------------------------------------------
-# Funções auxiliares 
-
-def print_result(current, voltage):
-    print("Corrente: \n")
-    for i in current:
-        for j in i:
-            print("%.5f" % j, end = '    ')
-        print("")
-
-
-    print("\n\nTensão: \n")
-    for i in voltage:
-        for j in i:
-            print("%.5f" % j, end = '    ')
-        print("")
-
 def init_current(v0, z0):
-    return v0/z0
+  return v0/z0
 
 def init_voltage(vs, z0, rs):
-    return z0*vs/(z0+rs)
+  return z0*vs/(z0+rs)
 
 def coef_refl(r, z0):
-    if r == 'inf':
-        return 1
-    else:
-        return (r-z0)/(r+z0)
+  if r == float(math.inf):
+      return 1
+  else:
+      return (r-z0)/(r+z0)
 
 def constant(dt, X, dz):
-    return dt/(X*dz)
+  return dt/(X*dz)
 # ----------------------------------------------------------------
 
 # Atualiza as matrizes de tensão e corrente a cada incremento no tempo
 def update_matrix(current_matrix, voltage_matrix, current_sum, voltage_sum, bw, current, voltage):
-    if(bw):
-        current_matrix[time] = current_sum - current[::-1]
-        voltage_matrix[time] = voltage_sum + voltage[::-1]
-    else:
-        current_matrix[time] = current_sum + current
-        voltage_matrix[time] = voltage_sum + voltage
+  if(bw):
+      current_matrix[time] = current_sum - current[::-1]
+      voltage_matrix[time] = voltage_sum + voltage[::-1]
+  else:
+      current_matrix[time] = current_sum + current
+      voltage_matrix[time] = voltage_sum + voltage
     
 
 # Simula a propagação da onda a cada tempo t
 def wave_propagation(i0, v0, current_matrix, voltage_matrix, current_sum, voltage_sum, bw):
-    global time
+  global time
 
-    voltage = np.zeros(array_size)
-    current = np.zeros(array_size)
+  voltage = np.zeros(array_size)
+  current = np.zeros(array_size)
 
-    voltage[0] = v0
-    current[0] = i0
+  voltage[0] = v0
+  current[0] = i0
 
-    update_matrix(current_matrix, voltage_matrix, current_sum, voltage_sum, bw, current, voltage)
-    time+=1
+  update_matrix(current_matrix, voltage_matrix, current_sum, voltage_sum, bw, current, voltage)
+  time+=1
 
-    for n in range(1, n_max):
-        for k in range(0, k_max):
-            current[k+1] = current[k+1] - c1*(voltage[k+1] - voltage[k])  
-            voltage[k] = voltage[k] - c2*(current[k+1] - current[k])
+  for n in range(1, n_max):
+      for k in range(0, k_max):
+          current[k+1] = current[k+1] - c1*(voltage[k+1] - voltage[k])  
+          voltage[k] = voltage[k] - c2*(current[k+1] - current[k])
 
-        update_matrix(current_matrix, voltage_matrix, current_sum, voltage_sum, bw, current, voltage)
-        time+=1
-    voltage[array_size-1] = voltage[array_size-2]
-    current[array_size-1] = current[array_size-2]
-    
-    return current, voltage
+      update_matrix(current_matrix, voltage_matrix, current_sum, voltage_sum, bw, current, voltage)
+      time+=1
+  voltage[array_size-1] = voltage[array_size-2]
+  current[array_size-1] = current[array_size-2]
+  
+  return current, voltage
 
-def calculate(rl):
+class FDTD():
+  def calculate(rl):
     global c1, c2, array_size, n_max, k_max, time
+
+    time = 1
 
     # Cálculo das constantes das Equações do Telegrafista
     c1 = constant(dt, L, dz)
@@ -174,22 +143,10 @@ def calculate(rl):
         current_sum -= r_current[::-1]
         voltage_sum += r_voltage[::-1]     
 
-    print_result(current_matrix, voltage_matrix)
+    return (current_matrix, voltage_matrix)
+    # print_result(current_matrix, voltage_matrix)
     
-    print("n_max: {}".format(n_max))
-    print("k_max: {}".format(k_max))
-    print("c1: {}".format(c1))
-    print("c2: {}".format(c2))
-
-    app = Application(current_matrix, voltage_matrix)
-    app.minsize(500,500)
-    app.title("Ondas Eletromagnéticas")
-    app.mainloop()
-
-def main():
-    rl = rl_choice_menu()
-    calculate(rl)
-
-    
-if __name__ == '__main__':
-    main()
+    # print("n_max: {}".format(n_max))
+    # print("k_max: {}".format(k_max))
+    # print("c1: {}".format(c1))
+    # print("c2: {}".format(c2))
