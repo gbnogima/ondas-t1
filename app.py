@@ -4,14 +4,24 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from utils import Utils
 import math
-from fdtd3 import FDTD
+from fdtd import FDTD
+
+def transposeMatrixColumn(matrix, col):
+	return [row[col] for row in matrix]
 
 class Application(Tk):
 	def updateCanvas(self, val):
 		if(not hasattr(self, 'comboBox') or self.comboBox.current() == 0):
-			self.matplotCanvas([x for x in range(len(self.voltage_matrix[int(val)]))], self.voltage_matrix[int(val)], self.voltage_matrix.max())
+			matrix = self.voltage_matrix
 		else:
-			self.matplotCanvas([x for x in range(len(self.current_matrix[int(val)]))], self.current_matrix[int(val)], self.current_matrix.max())
+			matrix = self.current_matrix
+
+		if(not hasattr(self, 'comboBox2') or self.comboBox2.current() == 0):
+			array = matrix[int(val)]
+		else:
+			array = transposeMatrixColumn(matrix, int(val))
+
+		self.matplotCanvas([x for x in range(len(array))], array, matrix.max())
 
 	def radioSelect(self):
 		(current_matrix, voltage_matrix) = FDTD.calculate(self.r.get())
@@ -21,6 +31,11 @@ class Application(Tk):
 		self.updateCanvas(0)
 
 	def comboSelect(self, value):
+		self.slide1.set(0)
+		self.updateCanvas(0)
+
+	def comboSelect2(self, value):
+		self.slide1.config(to=len(current_matrix[0])-1)
 		self.slide1.set(0)
 		self.updateCanvas(0)
 
@@ -61,6 +76,15 @@ class Application(Tk):
 		self.comboBox.current(0)
 		self.comboBox.pack()
 		self.comboBox.bind("<<ComboboxSelected>>", self.comboSelect)
+
+		varText = StringVar()
+		label3 = Label(container, textvariable=varText, font=("Roboto", 14))
+		varText.set('Variar em:')
+		label3.pack(pady=(20,0))
+		self.comboBox2 = ttk.Combobox(container, values=["X", "T"])
+		self.comboBox2.current(0)
+		self.comboBox2.pack()
+		self.comboBox2.bind("<<ComboboxSelected>>", self.comboSelect2)
 
 		self.slide1 = Scale(container, from_=0, to=len(self.current_matrix)-1, orient=HORIZONTAL, length=400, bd=0,
 										bg='white', troughcolor='#ccc', command=self.updateCanvas)
