@@ -4,38 +4,57 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from utils import Utils
 import math
-from fdtd import FDTD
+from fdtd1 import FDTD1
+from fdtd2 import FDTD2
 
 def transposeMatrixColumn(matrix, col):
 	return [row[col] for row in matrix]
 
 class Application(Tk):
 	def updateCanvas(self, val):
-		if(not hasattr(self, 'comboBox') or self.comboBox.current() == 0):
+		if(not hasattr(self, 'cbMatrixOp') or self.cbMatrixOp.current() == 0):
 			matrix = self.voltage_matrix
 		else:
 			matrix = self.current_matrix
 
-		if(not hasattr(self, 'comboBox2') or self.comboBox2.current() == 0):
+		if(not hasattr(self, 'cbVarOp') or self.cbVarOp.current() == 0):
 			array = matrix[int(val)]
 		else:
 			array = transposeMatrixColumn(matrix, int(val))
 
-		self.matplotCanvas([x for x in range(len(array))], array, matrix.max())
+		self.matplotCanvas([x for x in range(len(array))], array, matrix.max(), matrix.min())
 
-	def radioSelect(self):
-		(current_matrix, voltage_matrix) = FDTD.calculate(self.r.get())
+	def getMatrix(self):
+		if(not hasattr(self, 'cbInputOp') or self.cbInputOp.current() == 0):
+			(current_matrix, voltage_matrix) = FDTD1.calculate(self.r.get())
+		else:
+			(current_matrix, voltage_matrix) = FDTD2.calculate(self.r.get())
 		self.current_matrix = current_matrix
 		self.voltage_matrix = voltage_matrix
+
+	def radioSelect(self):
+		self.getMatrix()
 		self.slide1.set(0)
 		self.updateCanvas(0)
 
-	def comboSelect(self, value):
+	def cbMatrixOpSelect(self, value):
 		self.slide1.set(0)
 		self.updateCanvas(0)
 
-	def comboSelect2(self, value):
-		self.slide1.config(to=len(current_matrix[0])-1)
+	def cbVarOpSelect(self, value):
+		if(self.cbVarOp.current() == 0):
+			self.slide1.config(to=len(self.current_matrix)-1)
+		else: 
+			self.slide1.config(to=len(self.current_matrix[0])-1)
+		self.slide1.set(0)
+		self.updateCanvas(0)
+
+	def cbInputOpSelect(self, value):
+		self.getMatrix()
+		if(self.cbVarOp.current() == 0):
+			self.slide1.config(to=len(self.current_matrix)-1)
+		else: 
+			self.slide1.config(to=len(self.current_matrix[0])-1)
 		self.slide1.set(0)
 		self.updateCanvas(0)
 
@@ -68,23 +87,32 @@ class Application(Tk):
 											command=self.radioSelect)
 		R3.pack()
 
-		opText = StringVar()
-		label2 = Label(container, textvariable=opText, font=("Roboto", 14))
-		opText.set('Exibir gráfico de:')
-		label2.pack(pady=(20,0))
-		self.comboBox = ttk.Combobox(container, values=["Tensão", "Corrente"])
-		self.comboBox.current(0)
-		self.comboBox.pack()
-		self.comboBox.bind("<<ComboboxSelected>>", self.comboSelect)
+		txtInputOp = StringVar()
+		lblInputOp = Label(container, textvariable=txtInputOp, font=("Roboto", 14))
+		txtInputOp.set('Entrada:')
+		lblInputOp.pack(pady=(20,0))
+		self.cbInputOp = ttk.Combobox(container, values=["Entrada1", "Entrada2"])
+		self.cbInputOp.current(0)
+		self.cbInputOp.pack()
+		self.cbInputOp.bind("<<ComboboxSelected>>", self.cbInputOpSelect)
 
-		varText = StringVar()
-		label3 = Label(container, textvariable=varText, font=("Roboto", 14))
-		varText.set('Variar em:')
-		label3.pack(pady=(20,0))
-		self.comboBox2 = ttk.Combobox(container, values=["X", "T"])
-		self.comboBox2.current(0)
-		self.comboBox2.pack()
-		self.comboBox2.bind("<<ComboboxSelected>>", self.comboSelect2)
+		txtMatrixOp = StringVar()
+		lblMatrixOp = Label(container, textvariable=txtMatrixOp, font=("Roboto", 14))
+		txtMatrixOp.set('Exibir gráfico de:')
+		lblMatrixOp.pack(pady=(20,0))
+		self.cbMatrixOp = ttk.Combobox(container, values=["Tensão", "Corrente"])
+		self.cbMatrixOp.current(0)
+		self.cbMatrixOp.pack()
+		self.cbMatrixOp.bind("<<ComboboxSelected>>", self.cbMatrixOpSelect)
+
+		txtVarOp = StringVar()
+		lblVarOp = Label(container, textvariable=txtVarOp, font=("Roboto", 14))
+		txtVarOp.set('Variar em:')
+		lblVarOp.pack(pady=(20,0))
+		self.cbVarOp = ttk.Combobox(container, values=["X", "T"])
+		self.cbVarOp.current(0)
+		self.cbVarOp.pack()
+		self.cbVarOp.bind("<<ComboboxSelected>>", self.cbVarOpSelect)
 
 		self.slide1 = Scale(container, from_=0, to=len(self.current_matrix)-1, orient=HORIZONTAL, length=400, bd=0,
 										bg='white', troughcolor='#ccc', command=self.updateCanvas)
@@ -96,14 +124,14 @@ class Application(Tk):
 		self.voltage_matrix = voltage_matrix
 		self.render()
 
-	def matplotCanvas(self, x, y, max):
+	def matplotCanvas(self, x, y, max, min):
 		self.a.clear()
-		self.a.set_ylim(0, max + 0.01)
+		self.a.set_ylim(min - 0.01, max + 0.01)
 		self.a.plot(x, y)
 		self.canvas.draw()
 		self.canvas.get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)
 
-(current_matrix, voltage_matrix) = FDTD.calculate(0)
+(current_matrix, voltage_matrix) = FDTD1.calculate(0)
 app = Application(current_matrix, voltage_matrix)
 app.minsize(500,500)
 app.title("Ondas Eletromagnéticas")
