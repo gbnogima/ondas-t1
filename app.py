@@ -51,10 +51,10 @@ class Application(Tk):
 
 	def cbVarOpSelect(self, value):
 		if(self.cbVarOp.current() == 0):
-			self.x_label = "Tempo (s)"
+			self.x_label = "Espaço (m)"
 			self.slide1.config(to=len(self.current_matrix)-1)
 		else: 
-			self.x_label = "Espaço (m)"
+			self.x_label = "Tempo (s)"
 			self.slide1.config(to=len(self.current_matrix[0])-1)
 		self.slide1.set(0)
 		self.updateCanvas(0)
@@ -72,7 +72,7 @@ class Application(Tk):
 		f = Figure(figsize=(5, 5), dpi=100)
 		self.a = f.add_subplot(111)
 		self.canvas = FigureCanvasTkAgg(f, self)
-		self.x_label = "Tempo (s)"
+		self.x_label = "Espaço (m)"
 		self.y_label = "Tensão (V)" 
 		self.updateCanvas(0)
 			
@@ -121,7 +121,7 @@ class Application(Tk):
 		lblVarOp = Label(container, textvariable=txtVarOp, font=("Roboto", 14))
 		txtVarOp.set('Variar em:')
 		lblVarOp.pack(pady=(pad,0))
-		self.cbVarOp = ttk.Combobox(container, values=["Z", "T"])
+		self.cbVarOp = ttk.Combobox(container, values=["T", "Z"])
 		self.cbVarOp.current(0)
 		self.cbVarOp.pack()
 		self.cbVarOp.bind("<<ComboboxSelected>>", self.cbVarOpSelect)
