@@ -19,10 +19,10 @@ class Application(Tk):
 
 		if(not hasattr(self, 'cbVarOp') or self.cbVarOp.current() == 0):
 			array = matrix[int(val)]
-			multiplier = dt
+			multiplier = self.dz 
 		else:
 			array = transposeMatrixColumn(matrix, int(val))
-			multiplier = dz
+			multiplier = self.dt * 10**6
 
 		self.matplotCanvas([x * multiplier for x in range(len(array))], array, matrix.max(), matrix.min())
 
@@ -54,7 +54,7 @@ class Application(Tk):
 			self.x_label = "Espaço (m)"
 			self.slide1.config(to=len(self.current_matrix)-1)
 		else: 
-			self.x_label = "Tempo (s)"
+			self.x_label = "Tempo (µs)"
 			self.slide1.config(to=len(self.current_matrix[0])-1)
 		self.slide1.set(0)
 		self.updateCanvas(0)
