@@ -168,4 +168,4 @@ class FDTD2:
 
             wave_propagation(i0, v0, current_matrix, voltage_matrix, 1)
 
-        return(current_matrix, voltage_matrix)
+        return(current_matrix, voltage_matrix, dz, dt)

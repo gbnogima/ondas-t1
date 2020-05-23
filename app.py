@@ -19,18 +19,22 @@ class Application(Tk):
 
 		if(not hasattr(self, 'cbVarOp') or self.cbVarOp.current() == 0):
 			array = matrix[int(val)]
+			multiplier = dt
 		else:
 			array = transposeMatrixColumn(matrix, int(val))
+			multiplier = dz
 
-		self.matplotCanvas([x for x in range(len(array))], array, matrix.max(), matrix.min())
+		self.matplotCanvas([x * multiplier for x in range(len(array))], array, matrix.max(), matrix.min())
 
 	def getMatrix(self):
 		if(not hasattr(self, 'cbInputOp') or self.cbInputOp.current() == 0):
-			(current_matrix, voltage_matrix) = FDTD1.calculate(self.r.get())
+			(current_matrix, voltage_matrix, dz, dt) = FDTD1.calculate(self.r.get())
 		else:
-			(current_matrix, voltage_matrix) = FDTD2.calculate(self.r.get())
+			(current_matrix, voltage_matrix, dz, dt) = FDTD2.calculate(self.r.get())
 		self.current_matrix = current_matrix
 		self.voltage_matrix = voltage_matrix
+		self.dz = dz
+		self.dt = dt
 
 	def radioSelect(self):
 		self.getMatrix()
@@ -38,13 +42,19 @@ class Application(Tk):
 		self.updateCanvas(0)
 
 	def cbMatrixOpSelect(self, value):
+		if(self.cbMatrixOp.current() == 0):
+			self.y_label = "Tensão (V)"
+		else:
+			self.y_label = "Corrente (A)"
 		self.slide1.set(0)
 		self.updateCanvas(0)
 
 	def cbVarOpSelect(self, value):
 		if(self.cbVarOp.current() == 0):
+			self.x_label = "Tempo (s)"
 			self.slide1.config(to=len(self.current_matrix)-1)
 		else: 
+			self.x_label = "Espaço (m)"
 			self.slide1.config(to=len(self.current_matrix[0])-1)
 		self.slide1.set(0)
 		self.updateCanvas(0)
@@ -62,10 +72,12 @@ class Application(Tk):
 		f = Figure(figsize=(5, 5), dpi=100)
 		self.a = f.add_subplot(111)
 		self.canvas = FigureCanvasTkAgg(f, self)
-		# Utils.print_result(self.current_matrix, self.voltage_matrix)
+		self.x_label = "Tempo (s)"
+		self.y_label = "Tensão (V)" 
 		self.updateCanvas(0)
 			
 	def render(self):
+		pad = 10
 		container = Frame(self)
 		self.container = container
 		container.pack(side="top", fill="both", expand=True)
@@ -74,7 +86,7 @@ class Application(Tk):
 		resText = StringVar()
 		label = Label(container, textvariable=resText, font=("Roboto", 19))
 		resText.set('Resistência:')
-		label.pack(pady=(20,0))
+		label.pack(pady=(pad,0))
 		R1 = Radiobutton(container, text="∞ (carga em aberto)", variable=self.r, value=float(math.inf),
 											command=self.radioSelect)
 		R1.pack()
@@ -90,7 +102,7 @@ class Application(Tk):
 		txtInputOp = StringVar()
 		lblInputOp = Label(container, textvariable=txtInputOp, font=("Roboto", 14))
 		txtInputOp.set('Entrada:')
-		lblInputOp.pack(pady=(20,0))
+		lblInputOp.pack(pady=(pad,0))
 		self.cbInputOp = ttk.Combobox(container, values=["Entrada1", "Entrada2"])
 		self.cbInputOp.current(0)
 		self.cbInputOp.pack()
@@ -99,7 +111,7 @@ class Application(Tk):
 		txtMatrixOp = StringVar()
 		lblMatrixOp = Label(container, textvariable=txtMatrixOp, font=("Roboto", 14))
 		txtMatrixOp.set('Exibir gráfico de:')
-		lblMatrixOp.pack(pady=(20,0))
+		lblMatrixOp.pack(pady=(pad,0))
 		self.cbMatrixOp = ttk.Combobox(container, values=["Tensão", "Corrente"])
 		self.cbMatrixOp.current(0)
 		self.cbMatrixOp.pack()
@@ -108,8 +120,8 @@ class Application(Tk):
 		txtVarOp = StringVar()
 		lblVarOp = Label(container, textvariable=txtVarOp, font=("Roboto", 14))
 		txtVarOp.set('Variar em:')
-		lblVarOp.pack(pady=(20,0))
-		self.cbVarOp = ttk.Combobox(container, values=["X", "T"])
+		lblVarOp.pack(pady=(pad,0))
+		self.cbVarOp = ttk.Combobox(container, values=["Z", "T"])
 		self.cbVarOp.current(0)
 		self.cbVarOp.pack()
 		self.cbVarOp.bind("<<ComboboxSelected>>", self.cbVarOpSelect)
@@ -118,21 +130,26 @@ class Application(Tk):
 										bg='white', troughcolor='#ccc', command=self.updateCanvas)
 		self.slide1.pack()
 
-	def __init__(self, current_matrix, voltage_matrix, *args, **kwargs):
+	def __init__(self, current_matrix, voltage_matrix, dz, dt, *args, **kwargs):
 		Tk.__init__(self, *args, **kwargs)
 		self.current_matrix = current_matrix
 		self.voltage_matrix = voltage_matrix
+		self.dz = dz
+		self.dt = dt
 		self.render()
 
 	def matplotCanvas(self, x, y, max, min):
 		self.a.clear()
+		self.a.set_xlabel(self.x_label)
+		self.a.set_ylabel(self.y_label)
 		self.a.set_ylim(min - 0.01, max + 0.01)
 		self.a.plot(x, y)
 		self.canvas.draw()
 		self.canvas.get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)
 
-(current_matrix, voltage_matrix) = FDTD1.calculate(0)
-app = Application(current_matrix, voltage_matrix)
-app.minsize(500,500)
+(current_matrix, voltage_matrix, dz, dt) = FDTD1.calculate(0)
+app = Application(current_matrix, voltage_matrix, dz, dt)
+app.minsize(700,600)
+app.maxsize(700,800)
 app.title("Ondas Eletromagnéticas")
 app.mainloop()

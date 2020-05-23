@@ -144,4 +144,4 @@ class FDTD1:
             current_sum -= r_current[::-1]
             voltage_sum += r_voltage[::-1]     
         
-        return(current_matrix, voltage_matrix)
+        return(current_matrix, voltage_matrix, dz, dt)
