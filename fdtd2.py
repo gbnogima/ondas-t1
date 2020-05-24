@@ -4,7 +4,7 @@ import math
 # Variáveis globais
 
 # Parâmetros da Linha de Transmissão
-vs = 2
+vs = 1
 rs = 75
 rl = 0
 l = 100 # Tamanho da linha
@@ -33,7 +33,7 @@ time = 0
 def init_current(v0):
     return v0/z0
 
-def init_voltage(vs):
+def init_voltage(vs, z0, rs):
     return z0*vs/(z0+rs)
 
 def coef_refl(r, z0):
@@ -145,7 +145,7 @@ class FDTD2:
         voltage_matrix = np.zeros(m_size)
         
         # Cálculo da tensão e corrente em z = -l
-        v0 = input_voltage(time, 1)
+        v0 = init_voltage(vs, z0, rs)
         i0 = init_current(v0)
 
         # Cálculo dos coeficientes de reflexão do gerador e da carga
