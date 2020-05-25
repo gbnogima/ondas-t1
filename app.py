@@ -2,7 +2,6 @@ from tkinter import *
 from tkinter import ttk
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from utils import Utils
 import math
 from fdtd1 import FDTD1
 from fdtd2 import FDTD2
